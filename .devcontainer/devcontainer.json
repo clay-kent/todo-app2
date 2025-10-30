@@ -1,0 +1,17 @@
+{
+  "name": "Vite-React-TS",
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+    "forwardPorts": [4173, 3000],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+              "christian-kohler.path-intellisense",
+              "dsznajder.es7-react-js-snippets",
+              "dbaeumer.vscode-eslint",
+              "bradlc.vscode-tailwindcss",
+              "esbenp.prettier-vscode"
+            ]
+        }
+    },
+  "postCreateCommand": "npm install"
+}
