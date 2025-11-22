@@ -9,6 +9,11 @@ const repositoryName = "todo-app2"; // ◀◀ 追加
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: process.env.NODE_ENV === "production" ? `/${repositoryName}/` : "/",
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
   build: {
     rollupOptions: {
       input: {
