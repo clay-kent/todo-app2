@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { TriangleAlert } from "lucide-react"
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
@@ -224,10 +225,12 @@ function FieldError({
     <div
       role="alert"
       data-slot="field-error"
-      className={cn("text-destructive text-sm font-normal", className)}
+      className={cn(
+        "text-destructive text-sm font-normal", "flex items-center space-x-4", className
+      )}
       {...props}
     >
-      {content}
+      <TriangleAlert />{content}
     </div>
   )
 }
