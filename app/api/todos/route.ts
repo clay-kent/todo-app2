@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const todos = await prisma.todo.findMany({
       where: { userId: user.id },
       orderBy: [
-        { priority: 'desc' },
+        { priority: 'asc' }, // enum is High, Medium, Low - asc gives High first
         { deadline: 'asc' },
         { createdAt: 'desc' },
       ],

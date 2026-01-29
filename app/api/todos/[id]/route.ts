@@ -29,8 +29,21 @@ export async function PATCH(
   }
 
   try {
+    // First verify the todo exists and belongs to the user
+    const existingTodo = await prisma.todo.findUnique({
+      where: { id: params.id },
+      select: { userId: true },
+    });
+
+    if (!existingTodo || existingTodo.userId !== user.id) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Todoが見つかりません' } },
+        { status: 404 }
+      );
+    }
+
     const todo = await prisma.todo.update({
-      where: { id: params.id, userId: user.id },
+      where: { id: params.id },
       data: {
         ...(parsed.data.name !== undefined && { name: parsed.data.name }),
         ...(parsed.data.isDone !== undefined && { isDone: parsed.data.isDone }),
@@ -73,8 +86,21 @@ export async function DELETE(
   }
 
   try {
+    // First verify the todo exists and belongs to the user
+    const existingTodo = await prisma.todo.findUnique({
+      where: { id: params.id },
+      select: { userId: true },
+    });
+
+    if (!existingTodo || existingTodo.userId !== user.id) {
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Todoが見つかりません' } },
+        { status: 404 }
+      );
+    }
+
     await prisma.todo.delete({
-      where: { id: params.id, userId: user.id },
+      where: { id: params.id },
     });
 
     return NextResponse.json({ success: true });

@@ -10,7 +10,7 @@ export const UpdateTodoSchema = z.object({
   name: z.string().min(1).max(32).optional(),
   isDone: z.boolean().optional(),
   priority: z.enum(['Low', 'Medium', 'High']).optional(),
-  deadline: z.string().datetime().nullable(),
+  deadline: z.string().datetime().nullable().optional(),
 });
 
 export type CreateTodoInput = z.infer<typeof CreateTodoSchema>;
