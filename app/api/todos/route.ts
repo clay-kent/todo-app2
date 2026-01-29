@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { CreateTodoSchema } from '@/lib/validation/todo';
 
@@ -15,16 +14,29 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const todos = await prisma.todo.findMany({
-      where: { userId: user.id },
-      orderBy: [
-        { priority: 'asc' }, // enum is High, Medium, Low - asc gives High first
-        { deadline: 'asc' },
-        { createdAt: 'desc' },
-      ],
-    });
+    const { data: todos, error: dbError } = await supabase
+      .from('todos')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('priority', { ascending: true }) // High, Medium, Low
+      .order('deadline', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false });
 
-    return NextResponse.json({ todos });
+    if (dbError) throw dbError;
+
+    // Transform snake_case to camelCase for consistency with frontend
+    const transformedTodos = todos?.map((todo) => ({
+      id: todo.id,
+      userId: todo.user_id,
+      name: todo.name,
+      isDone: todo.is_done,
+      priority: todo.priority,
+      deadline: todo.deadline,
+      createdAt: todo.created_at,
+      updatedAt: todo.updated_at,
+    })) || [];
+
+    return NextResponse.json({ todos: transformedTodos });
   } catch (e) {
     console.error('GET /api/todos error:', e);
     return NextResponse.json(
@@ -66,16 +78,32 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const todo = await prisma.todo.create({
-      data: {
-        userId: user.id,
+    const { data: todo, error: dbError } = await supabase
+      .from('todos')
+      .insert({
+        user_id: user.id,
         name: parsed.data.name,
         priority: parsed.data.priority,
-        deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : null,
-      },
-    });
+        deadline: parsed.data.deadline || null,
+      })
+      .select()
+      .single();
 
-    return NextResponse.json({ todo }, { status: 201 });
+    if (dbError) throw dbError;
+
+    // Transform snake_case to camelCase
+    const transformedTodo = {
+      id: todo.id,
+      userId: todo.user_id,
+      name: todo.name,
+      isDone: todo.is_done,
+      priority: todo.priority,
+      deadline: todo.deadline,
+      createdAt: todo.created_at,
+      updatedAt: todo.updated_at,
+    };
+
+    return NextResponse.json({ todo: transformedTodo }, { status: 201 });
   } catch (e) {
     console.error('POST /api/todos error:', e);
     return NextResponse.json(

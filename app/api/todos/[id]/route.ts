@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { UpdateTodoSchema } from '@/lib/validation/todo';
 
@@ -40,38 +39,52 @@ export async function PATCH(
 
   try {
     // First verify the todo exists and belongs to the user
-    const existingTodo = await prisma.todo.findUnique({
-      where: { id: params.id },
-      select: { userId: true },
-    });
+    const { data: existingTodo, error: fetchError } = await supabase
+      .from('todos')
+      .select('user_id')
+      .eq('id', params.id)
+      .single();
 
-    if (!existingTodo || existingTodo.userId !== user.id) {
+    if (fetchError || !existingTodo || existingTodo.user_id !== user.id) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'Todoが見つかりません' } },
         { status: 404 }
       );
     }
 
-    const todo = await prisma.todo.update({
-      where: { id: params.id },
-      data: {
-        ...(parsed.data.name !== undefined && { name: parsed.data.name }),
-        ...(parsed.data.isDone !== undefined && { isDone: parsed.data.isDone }),
-        ...(parsed.data.priority !== undefined && { priority: parsed.data.priority }),
-        ...(parsed.data.deadline !== undefined && {
-          deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : null,
-        }),
-      },
-    });
+    // Build update object with only provided fields
+    const updateData: any = {};
+    if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
+    if (parsed.data.isDone !== undefined) updateData.is_done = parsed.data.isDone;
+    if (parsed.data.priority !== undefined) updateData.priority = parsed.data.priority;
+    if (parsed.data.deadline !== undefined) {
+      updateData.deadline = parsed.data.deadline || null;
+    }
 
-    return NextResponse.json({ todo });
+    const { data: todo, error: updateError } = await supabase
+      .from('todos')
+      .update(updateData)
+      .eq('id', params.id)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    // Transform snake_case to camelCase
+    const transformedTodo = {
+      id: todo.id,
+      userId: todo.user_id,
+      name: todo.name,
+      isDone: todo.is_done,
+      priority: todo.priority,
+      deadline: todo.deadline,
+      createdAt: todo.created_at,
+      updatedAt: todo.updated_at,
+    };
+
+    return NextResponse.json({ todo: transformedTodo });
   } catch (e: any) {
-    if (e.code === 'P2025') {
-      return NextResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'Todoが見つかりません' } },
-        { status: 404 }
-      );
-    }
     console.error('PATCH /api/todos/[id] error:', e);
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'サーバーエラー' } },
@@ -97,30 +110,29 @@ export async function DELETE(
 
   try {
     // First verify the todo exists and belongs to the user
-    const existingTodo = await prisma.todo.findUnique({
-      where: { id: params.id },
-      select: { userId: true },
-    });
+    const { data: existingTodo, error: fetchError } = await supabase
+      .from('todos')
+      .select('user_id')
+      .eq('id', params.id)
+      .single();
 
-    if (!existingTodo || existingTodo.userId !== user.id) {
+    if (fetchError || !existingTodo || existingTodo.user_id !== user.id) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'Todoが見つかりません' } },
         { status: 404 }
       );
     }
 
-    await prisma.todo.delete({
-      where: { id: params.id },
-    });
+    const { error: deleteError } = await supabase
+      .from('todos')
+      .delete()
+      .eq('id', params.id)
+      .eq('user_id', user.id);
+
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({ success: true });
   } catch (e: any) {
-    if (e.code === 'P2025') {
-      return NextResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'Todoが見つかりません' } },
-        { status: 404 }
-      );
-    }
     console.error('DELETE /api/todos/[id] error:', e);
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'サーバーエラー' } },

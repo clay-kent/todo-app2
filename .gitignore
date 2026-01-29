@@ -38,10 +38,6 @@ lerna-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
-prisma/migrations/*
-!prisma/migrations/.gitkeep
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
