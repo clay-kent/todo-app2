@@ -57,10 +57,10 @@ All critical and high-severity security vulnerabilities have been successfully a
 - Automatic redirect on authentication failure
 
 ### 2. Database Security
-✅ **Row Level Security (RLS)**
+✅ **Application-Level Data Isolation**
 - Users can only access their own data
-- Enforced at database level (PostgreSQL)
-- Policy-based access control
+- Enforced via userId filtering in all queries
+- Additional authentication checks on all endpoints
 
 ### 3. Input Validation
 ✅ **Zod Schema Validation**
@@ -126,7 +126,7 @@ All critical and high-severity security vulnerabilities have been successfully a
 
 ### ✅ OWASP Top 10 Coverage
 
-1. **Broken Access Control**: Mitigated via RLS + Auth
+1. **Broken Access Control**: Mitigated via userId filtering + Auth
 2. **Cryptographic Failures**: Mitigated via Supabase/TLS
 3. **Injection**: Mitigated via Prisma ORM
 4. **Insecure Design**: Addressed with proper architecture

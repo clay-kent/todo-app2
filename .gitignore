@@ -41,7 +41,6 @@ next-env.d.ts
 # prisma
 prisma/migrations/*
 !prisma/migrations/.gitkeep
-!prisma/migrations/00000000000000_rls_setup/
 
 # Editor directories and files
 .vscode/*

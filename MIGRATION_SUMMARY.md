@@ -32,7 +32,7 @@ Successfully migrated the Todo application from Vite + React + localStorage to N
 ### Features Added
 ✅ Discord OAuth login via Supabase
 ✅ Multi-device synchronization
-✅ Row Level Security for data isolation
+✅ Application-level data isolation (userId filtering)
 ✅ Server-side validation
 ✅ Comprehensive error handling
 ✅ Type-safe database access with Prisma
@@ -56,7 +56,7 @@ Successfully migrated the Todo application from Vite + React + localStorage to N
 │   └── validation/              # Zod schemas
 ├── prisma/                      # Database schema & migrations
 │   ├── schema.prisma            # Prisma schema
-│   └── migrations/              # Migration files (including RLS)
+│   └── migrations/              # Migration files
 ├── MIGRATION.md                 # Detailed migration guide
 ├── README.md                    # Updated setup instructions
 ├── .env.example                 # Environment variables template
@@ -77,7 +77,7 @@ Successfully migrated the Todo application from Vite + React + localStorage to N
 - Prisma-generated types for database models
 
 ### Security
-- Row Level Security policies for data isolation
+- Application-level data isolation with userId filtering
 - Server-side authentication checks on all API routes
 - Input validation with Zod schemas
 - Proper session management
@@ -121,7 +121,7 @@ Successfully migrated the Todo application from Vite + React + localStorage to N
 ### Vulnerabilities Addressed
 1. ✅ Input validation with Zod on all API endpoints
 2. ✅ Authentication required for all data operations
-3. ✅ Row Level Security enforced at database level
+3. ✅ Data isolation via application-level userId filtering
 4. ✅ No SQL injection risk (using Prisma ORM)
 5. ✅ Session management via Supabase Auth
 
@@ -152,8 +152,7 @@ Users must complete these steps after merging:
 3. **Set Environment Variables** in `.env.local`
 4. **Run** `npm install`
 5. **Run** `npx prisma generate && npx prisma migrate dev`
-6. **Execute RLS SQL** in Supabase SQL Editor
-7. **Test** the application with Discord login
+6. **Test** the application with Discord login
 
 Complete instructions available in `MIGRATION.md`.
 

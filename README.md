@@ -39,17 +39,13 @@ npx prisma generate
 npx prisma migrate dev --name init
 ```
 
-### 4. RLS (Row Level Security) の設定
-
-Supabase SQL Editor で `prisma/migrations/00000000000000_rls_setup/migration.sql` の内容を実行してください。
-
-### 5. Discord OAuth の設定
+### 4. Discord OAuth の設定
 
 1. Discord Developer Portal で OAuth2 アプリケーションを作成
 2. Redirect URL を `https://your-project.supabase.co/auth/v1/callback` に設定
 3. Supabase ダッシュボードの Authentication > Providers で Discord を有効化
 
-### 6. 開発サーバーの起動
+### 5. 開発サーバーの起動
 
 ```bash
 npm run dev
@@ -65,7 +61,7 @@ http://localhost:3000 にアクセスして動作確認してください。
 - 期限の設定
 - 完了/未完了の切り替え
 - 複数端末での同期 (Supabase)
-- ユーザーごとのデータ分離 (RLS)
+- ユーザーごとのデータ分離（アプリケーションレベルのフィルタリング）
 
 ## 開発履歴
 

@@ -52,8 +52,7 @@ lib/
 prisma/
 ├── schema.prisma            # Database schema
 └── migrations/
-    └── 00000000000000_rls_setup/
-        └── migration.sql    # Row Level Security policies
+    └── .gitkeep             # Placeholder for migrations
 ```
 
 ### 3. Key Technology Changes
@@ -72,7 +71,7 @@ prisma/
 - ✅ Discord OAuth authentication
 - ✅ CRUD API endpoints with proper authentication
 - ✅ Prisma ORM for type-safe database access
-- ✅ Row Level Security (RLS) for data isolation
+- ✅ Application-level data isolation (userId filtering)
 - ✅ Priority levels (Low, Medium, High)
 - ✅ Deadline management with timestamps
 - ✅ Todo completion tracking
@@ -144,20 +143,7 @@ npx prisma generate
 npx prisma migrate dev --name init
 ```
 
-#### 5. Set Up Row Level Security (RLS)
-
-The RLS policies are in `prisma/migrations/00000000000000_rls_setup/migration.sql`.
-
-**Execute in Supabase SQL Editor:**
-
-1. Go to Supabase Dashboard > SQL Editor
-2. Create a new query
-3. Copy and paste the contents of `prisma/migrations/00000000000000_rls_setup/migration.sql`
-4. Run the query
-
-This will enable RLS and create policies to ensure users can only access their own todos.
-
-#### 6. Start Development Server
+#### 5. Start Development Server
 
 ```bash
 npm run dev
@@ -165,14 +151,14 @@ npm run dev
 
 Visit http://localhost:3000
 
-#### 7. Test the Application
+#### 6. Test the Application
 
 1. Click "Discordでログイン"
 2. Authorize with Discord
 3. You should be redirected to the todos page
 4. Add, edit, complete, and delete todos
 5. Log out and log back in - your todos should persist
-6. (Optional) Test with a different Discord account to verify RLS works
+6. (Optional) Test with a different Discord account to verify data isolation works
 
 ### Production Deployment
 
@@ -270,10 +256,10 @@ The application has been upgraded to Next.js 15 to address security vulnerabilit
 - Check that Discord provider is enabled in Supabase
 - Clear browser cookies and try again
 
-### RLS policy errors
-- Ensure RLS migration SQL has been executed
-- Check policies in Supabase Dashboard > Authentication > Policies
-- Verify user is authenticated (check cookies)
+### Data isolation issues
+- User data is filtered at the application level using userId
+- Ensure authentication is working correctly
+- Verify todos are associated with the correct userId in the database
 
 ## Support
 
