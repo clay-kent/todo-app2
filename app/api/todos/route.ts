@@ -49,8 +49,18 @@ export async function POST(req: NextRequest) {
   const parsed = CreateTodoSchema.safeParse(body);
 
   if (!parsed.success) {
+    const validationMessage = parsed.error.errors
+      .map((err) => err.message)
+      .join('\n');
+
     return NextResponse.json(
-      { error: { code: 'VALIDATION_ERROR', message: parsed.error.errors } },
+      {
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: validationMessage,
+          details: parsed.error.errors,
+        },
+      },
       { status: 400 }
     );
   }
