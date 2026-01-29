@@ -1,4 +1,4 @@
-# Migration Guide: Vite + React → Next.js + Supabase + Prisma
+# Migration Guide: Vite + React → Next.js + Supabase
 
 This document provides an overview of the migration performed and the steps required after merging.
 
@@ -42,17 +42,11 @@ app/
 └── globals.css              # Global styles with Tailwind
 
 lib/
-├── prisma.ts                # Prisma client singleton
 ├── supabase/
 │   ├── client.ts            # Browser Supabase client
 │   └── server.ts            # Server Supabase client
 └── validation/
     └── todo.ts              # Zod schemas for validation
-
-prisma/
-├── schema.prisma            # Database schema
-└── migrations/
-    └── .gitkeep             # Placeholder for migrations
 ```
 
 ### 3. Key Technology Changes
@@ -63,14 +57,14 @@ prisma/
 | localStorage | PostgreSQL (Supabase) |
 | No authentication | Supabase Auth (Discord OAuth) |
 | Client-side only | Full-stack with API routes |
-| No ORM | Prisma |
+| No ORM | Supabase Client (direct database access) |
 | No multi-device sync | Real-time sync via Supabase |
 
 ### 4. Features Implemented
 
 - ✅ Discord OAuth authentication
 - ✅ CRUD API endpoints with proper authentication
-- ✅ Prisma ORM for type-safe database access
+- ✅ Supabase client for type-safe database access
 - ✅ Application-level data isolation (userId filtering)
 - ✅ Priority levels (Low, Medium, High)
 - ✅ Deadline management with timestamps
@@ -84,7 +78,6 @@ prisma/
 1. **Supabase Project**
    - Create a project at https://supabase.com
    - Note your project URL and anon key
-   - Get database connection strings (pooler and direct)
 
 2. **Discord OAuth App**
    - Create an application at https://discord.com/developers
@@ -107,24 +100,14 @@ Create `.env.local` in the project root:
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL="https://xxxxx.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
-
-# Database (Prisma)
-DATABASE_URL="postgresql://postgres.xxxxx:[PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres.xxxxx:[PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
 ```
 
 **How to get these values:**
 
-1. In Supabase Dashboard:
-   - Go to Settings > API
-   - Copy "Project URL" → `NEXT_PUBLIC_SUPABASE_URL`
-   - Copy "anon public" key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   
-2. For database URLs:
-   - Go to Settings > Database
-   - Find "Connection string" section
-   - Use "Transaction pooler" for `DATABASE_URL`
-   - Use "Session pooler" or "Direct connection" for `DIRECT_URL`
+In Supabase Dashboard:
+- Go to Settings > API
+- Copy "Project URL" → `NEXT_PUBLIC_SUPABASE_URL`
+- Copy "anon public" key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 #### 3. Configure Discord OAuth in Supabase
 
@@ -133,14 +116,44 @@ DIRECT_URL="postgresql://postgres.xxxxx:[PASSWORD]@aws-0-ap-northeast-1.pooler.s
 3. Enter your Discord Client ID and Client Secret
 4. Save changes
 
-#### 4. Run Prisma Migrations
+#### 4. Create Database Table
 
-```bash
-# Generate Prisma client
-npx prisma generate
+In Supabase Dashboard, go to SQL Editor and run:
 
-# Create database tables
-npx prisma migrate dev --name init
+```sql
+CREATE TABLE todos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(32) NOT NULL,
+  is_done BOOLEAN DEFAULT false,
+  priority TEXT CHECK (priority IN ('High', 'Medium', 'Low')) DEFAULT 'Low',
+  deadline TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create index for faster queries
+CREATE INDEX idx_todos_user_id ON todos(user_id);
+
+-- Enable Row Level Security
+ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for user data isolation
+CREATE POLICY "Users can view their own todos"
+  ON todos FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own todos"
+  ON todos FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own todos"
+  ON todos FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own todos"
+  ON todos FOR DELETE
+  USING (auth.uid() = user_id);
 ```
 
 #### 5. Start Development Server
@@ -172,7 +185,6 @@ Visit http://localhost:3000
 #### Other Platforms
 
 - Set all environment variables
-- Ensure Prisma is properly installed: `npx prisma generate`
 - Build: `npm run build`
 - Start: `npm start`
 
@@ -193,26 +205,35 @@ Visit http://localhost:3000
 
 ### Database Schema
 
-The `todos` table schema:
+The `todos` table is created directly in Supabase via SQL:
 
 ```sql
-id          UUID      PRIMARY KEY
-user_id     UUID      NOT NULL (references auth.users)
-name        VARCHAR(32) NOT NULL
-is_done     BOOLEAN   DEFAULT false
-priority    ENUM      (High, Medium, Low) DEFAULT Low
-                      -- Ordered High > Medium > Low for ascending sort
-deadline    TIMESTAMPTZ NULL
-created_at  TIMESTAMPTZ DEFAULT now()
-updated_at  TIMESTAMPTZ DEFAULT now()
+CREATE TABLE todos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(32) NOT NULL,
+  is_done BOOLEAN DEFAULT false,
+  priority TEXT CHECK (priority IN ('High', 'Medium', 'Low')) DEFAULT 'Low',
+  deadline TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 ```
+
+**Key Features:**
+- UUID primary key with automatic generation
+- Foreign key to auth.users with cascade delete
+- Priority constraint ensuring valid values
+- Timestamp support with timezone awareness
+- Row Level Security (RLS) policies for data isolation
 
 ### Security Considerations
 
-1. **Row Level Security (RLS):** Ensures users can only access their own data
+1. **Row Level Security (RLS):** Database-level policies ensure users can only access their own data
 2. **API Authentication:** All API routes check for valid Supabase session
 3. **Input Validation:** Zod schemas validate all incoming data
 4. **Environment Variables:** Sensitive data stored in `.env.local` (not committed)
+5. **Supabase Client:** Uses server-side client for secure database operations
 
 ### Known Limitations
 
@@ -246,10 +267,10 @@ The application has been upgraded to Next.js 15 to address security vulnerabilit
 - Verify Supabase project is active
 - Check browser console for CORS errors
 
-### Prisma errors
-- Run `npx prisma generate` after installing dependencies
-- Check database connection strings
-- Ensure migrations have been run
+### Database errors
+- Verify the todos table exists in Supabase
+- Check that RLS policies are enabled
+- Ensure user_id references are correct
 
 ### Authentication issues
 - Verify Discord OAuth app callback URL matches Supabase auth settings
@@ -266,5 +287,4 @@ The application has been upgraded to Next.js 15 to address security vulnerabilit
 For issues or questions:
 1. Check the README.md for setup instructions
 2. Review Supabase documentation: https://supabase.com/docs
-3. Review Prisma documentation: https://www.prisma.io/docs
-4. Review Next.js documentation: https://nextjs.org/docs
+3. Review Next.js documentation: https://nextjs.org/docs
