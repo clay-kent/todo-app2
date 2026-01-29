@@ -4,12 +4,14 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
-  const supabase = createClient();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const supabase = createClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         router.push('/todos');
@@ -17,9 +19,11 @@ export default function LoginPage() {
         setLoading(false);
       }
     });
-  }, [router, supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogin = async () => {
+    const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {

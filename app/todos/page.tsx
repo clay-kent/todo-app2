@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 type Todo = {
   id: string;
   name: string;
@@ -20,15 +22,16 @@ export default function TodosPage() {
   const [name, setName] = useState('');
   const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Low');
   const [deadline, setDeadline] = useState('');
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
     checkUser();
     fetchTodos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkUser = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');
@@ -85,6 +88,7 @@ export default function TodosPage() {
   };
 
   const handleLogout = async () => {
+    const supabase = createClient();
     await supabase.auth.signOut();
     router.push('/login');
   };
