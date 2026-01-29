@@ -26,7 +26,7 @@ npm install
 -- Create todos table
 CREATE TABLE todos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name VARCHAR(32) NOT NULL,
   is_done BOOLEAN DEFAULT false,
   priority TEXT CHECK (priority IN ('High', 'Medium', 'Low')) DEFAULT 'Low',
@@ -49,6 +49,26 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER update_todos_updated_at BEFORE UPDATE ON todos
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable Row Level Security
+ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for user data isolation
+CREATE POLICY "Users can view their own todos"
+  ON todos FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own todos"
+  ON todos FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own todos"
+  ON todos FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own todos"
+  ON todos FOR DELETE
+  USING (auth.uid() = user_id);
 ```
 
 ### 3. 環境変数の設定
@@ -83,7 +103,7 @@ http://localhost:3000 にアクセスして動作確認してください。
 - 期限の設定
 - 完了/未完了の切り替え
 - 複数端末での同期 (Supabase)
-- ユーザーごとのデータ分離（アプリケーションレベルのフィルタリング）
+- ユーザーごとのデータ分離（Row Level Security）
 
 ## 開発履歴
 

@@ -65,7 +65,7 @@ lib/
 - ✅ Discord OAuth authentication
 - ✅ CRUD API endpoints with proper authentication
 - ✅ Supabase client for type-safe database access
-- ✅ Application-level data isolation (userId filtering)
+- ✅ Database-level data isolation with Row Level Security (RLS)
 - ✅ Priority levels (Low, Medium, High)
 - ✅ Deadline management with timestamps
 - ✅ Todo completion tracking
@@ -132,8 +132,20 @@ CREATE TABLE todos (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Create index for faster queries
-CREATE INDEX idx_todos_user_id ON todos(user_id);
+-- Create index for performance
+CREATE INDEX idx_todos_user_created ON todos(user_id, created_at);
+
+-- Create updated_at trigger
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_todos_updated_at BEFORE UPDATE ON todos
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Enable Row Level Security
 ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
@@ -278,9 +290,9 @@ The application has been upgraded to Next.js 15 to address security vulnerabilit
 - Clear browser cookies and try again
 
 ### Data isolation issues
-- User data is filtered at the application level using userId
+- User data is protected by Row Level Security (RLS) at the database level
 - Ensure authentication is working correctly
-- Verify todos are associated with the correct userId in the database
+- Verify RLS policies are enabled on the todos table
 
 ## Support
 
