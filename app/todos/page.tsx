@@ -19,6 +19,7 @@ type Todo = {
 export default function TodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Low');
   const [deadline, setDeadline] = useState('');
@@ -41,49 +42,97 @@ export default function TodosPage() {
   };
 
   const fetchTodos = async () => {
-    const res = await fetch('/api/todos');
-    if (res.ok) {
-      const data = await res.json();
-      setTodos(data.todos);
+    try {
+      const res = await fetch('/api/todos');
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        setTodos(data.todos);
+        setError(null);
+      } else {
+        setError('Todoの取得に失敗しました');
+      }
+    } catch (err) {
+      setError('ネットワークエラーが発生しました');
     }
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch('/api/todos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        priority,
-        deadline: deadline ? new Date(deadline).toISOString() : null,
-      }),
-    });
+    setError(null);
+    
+    try {
+      const res = await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          priority,
+          deadline: deadline ? new Date(deadline).toISOString() : null,
+        }),
+      });
 
-    if (res.ok) {
-      setName('');
-      setPriority('Low');
-      setDeadline('');
-      fetchTodos();
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      if (res.ok) {
+        setName('');
+        setPriority('Low');
+        setDeadline('');
+        fetchTodos();
+      } else {
+        const data = await res.json();
+        setError(data.error?.message || 'Todoの追加に失敗しました');
+      }
+    } catch (err) {
+      setError('ネットワークエラーが発生しました');
     }
   };
 
   const handleToggle = async (id: string, isDone: boolean) => {
-    const res = await fetch(`/api/todos/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isDone: !isDone }),
-    });
+    try {
+      const res = await fetch(`/api/todos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDone: !isDone }),
+      });
 
-    if (res.ok) {
-      fetchTodos();
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      if (res.ok) {
+        fetchTodos();
+      } else {
+        setError('Todoの更新に失敗しました');
+      }
+    } catch (err) {
+      setError('ネットワークエラーが発生しました');
     }
   };
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      fetchTodos();
+    try {
+      const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+      
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+      
+      if (res.ok) {
+        fetchTodos();
+      } else {
+        setError('Todoの削除に失敗しました');
+      }
+    } catch (err) {
+      setError('ネットワークエラーが発生しました');
     }
   };
 
@@ -109,6 +158,12 @@ export default function TodosPage() {
         </button>
       </div>
 
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleAdd} className="mb-8 space-y-4">
         <div>
           <input
@@ -124,7 +179,7 @@ export default function TodosPage() {
         <div className="flex gap-4">
           <select
             value={priority}
-            onChange={(e) => setPriority(e.target.value as any)}
+            onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
             className="border p-2 rounded"
           >
             <option value="Low">Low</option>

@@ -7,7 +7,12 @@ export async function GET(req: NextRequest) {
 
   if (code) {
     const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (error) {
+      console.error('Auth callback error:', error);
+      return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_failed`);
+    }
   }
 
   return NextResponse.redirect(`${requestUrl.origin}/todos`);

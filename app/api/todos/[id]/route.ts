@@ -31,9 +31,9 @@ export async function PATCH(
     const todo = await prisma.todo.update({
       where: { id: params.id, userId: user.id },
       data: {
-        ...(parsed.data.name && { name: parsed.data.name }),
+        ...(parsed.data.name !== undefined && { name: parsed.data.name }),
         ...(parsed.data.isDone !== undefined && { isDone: parsed.data.isDone }),
-        ...(parsed.data.priority && { priority: parsed.data.priority }),
+        ...(parsed.data.priority !== undefined && { priority: parsed.data.priority }),
         ...(parsed.data.deadline !== undefined && {
           deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : null,
         }),

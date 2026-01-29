@@ -23,7 +23,7 @@ model Todo {
 }
 
 enum Priority {
-  Low
-  Medium
-  High
+  High   @map("High")
+  Medium @map("Medium")
+  Low    @map("Low")
 }
