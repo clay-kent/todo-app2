@@ -23,7 +23,17 @@ export async function PATCH(
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: { code: 'VALIDATION_ERROR', message: parsed.error.errors } },
+      {
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: '入力内容に誤りがあります',
+          details: parsed.error.errors.map((err) => ({
+            path: err.path,
+            message: err.message,
+            code: err.code,
+          })),
+        },
+      },
       { status: 400 }
     );
   }
