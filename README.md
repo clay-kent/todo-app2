@@ -4,7 +4,7 @@ Next.js、TypeScript、Tailwind CSS、Supabase、Prisma を使用した「Todo�
 
 ## 技術スタック
 
-- **フロントエンド**: Next.js 14 (App Router)、React、TypeScript、Tailwind CSS
+- **フロントエンド**: Next.js 15 (App Router)、React 19、TypeScript、Tailwind CSS
 - **バックエンド**: Next.js API Routes
 - **データベース**: PostgreSQL (Supabase)
 - **ORM**: Prisma
@@ -71,6 +71,7 @@ http://localhost:3000 にアクセスして動作確認してください。
 
 - 2025年10月23日：プロジェクト開始 (Vite + React + localStorage)
 - 2026年1月29日：Next.js + Supabase + Prisma へ全面移行
+- 2026年1月29日：Next.js 15 へアップグレード（セキュリティ脆弱性対応）
 
 ## ライセンス
 

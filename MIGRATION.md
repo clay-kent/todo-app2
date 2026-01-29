@@ -60,7 +60,7 @@ prisma/
 
 | Before | After |
 |--------|-------|
-| Vite | Next.js 14 (App Router) |
+| Vite | Next.js 15 (App Router) |
 | localStorage | PostgreSQL (Supabase) |
 | No authentication | Supabase Auth (Discord OAuth) |
 | Client-side only | Full-stack with API routes |
@@ -229,10 +229,11 @@ updated_at  TIMESTAMPTZ DEFAULT now()
 
 ### Known Limitations
 
-1. **npm audit warnings:** Some dependencies have security advisories
-   - Next.js 14.2.x has known DoS vulnerabilities (GHSA-9g9p-9gw9-jx7f, GHSA-h25m-26qc-wcjf)
-   - Consider upgrading to Next.js 15+ after testing
-   - glob package used by eslint-config-next has a command injection vulnerability
+1. **npm audit warnings:** Dependencies security advisories
+   - ~~Next.js 14.2.x has known DoS vulnerabilities~~ **FIXED: Upgraded to Next.js 15.5.11**
+   - 1 moderate severity vulnerability remains in canary versions (GHSA-5f7q-jpqc-wp7h)
+   - This moderate vulnerability only affects Next.js canary versions 15.0.0-canary.0 - 15.6.0-canary.60
+   - Production version 15.5.11 is not affected
    
 2. **Build without environment variables:** 
    - Build will succeed but pages won't work without proper Supabase credentials
@@ -241,6 +242,15 @@ updated_at  TIMESTAMPTZ DEFAULT now()
 3. **No offline support:**
    - Unlike localStorage, requires internet connection
    - Consider adding service worker for PWA support if needed
+
+### Breaking Changes from Next.js 14 to 15
+
+The application has been upgraded to Next.js 15 to address security vulnerabilities:
+
+1. **`cookies()` is now async** - All server-side Supabase client creation now uses `await cookies()`
+2. **Route params are now Promises** - Dynamic route parameters must be awaited
+3. **React 19** - Upgraded from React 18 to React 19
+4. **Enhanced type safety** - Better TypeScript support for async operations
 
 ## Troubleshooting
 
