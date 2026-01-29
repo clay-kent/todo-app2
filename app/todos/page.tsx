@@ -94,7 +94,7 @@ export default function TodosPage() {
       const res = await fetch(`/api/todos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isDone: !isDone }),
+        body: JSON.stringify({ isDone }),
       });
 
       if (res.status === 401) {
