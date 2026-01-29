@@ -214,7 +214,8 @@ id          UUID      PRIMARY KEY
 user_id     UUID      NOT NULL (references auth.users)
 name        VARCHAR(32) NOT NULL
 is_done     BOOLEAN   DEFAULT false
-priority    ENUM      (Low, Medium, High) DEFAULT Low
+priority    ENUM      (High, Medium, Low) DEFAULT Low
+                      -- Ordered High > Medium > Low for ascending sort
 deadline    TIMESTAMPTZ NULL
 created_at  TIMESTAMPTZ DEFAULT now()
 updated_at  TIMESTAMPTZ DEFAULT now()
