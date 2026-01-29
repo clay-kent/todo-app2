@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import TodoList from '../components/TodoList';
+import TodoForm from '../components/TodoForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,9 +22,6 @@ export default function TodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Low');
-  const [deadline, setDeadline] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -60,18 +59,17 @@ export default function TodosPage() {
     }
   };
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAdd = async (formData: { name: string; priority: 'Low' | 'Medium' | 'High'; deadline: Date | null }) => {
     setError(null);
-    
+
     try {
       const res = await fetch('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          priority,
-          deadline: deadline ? new Date(deadline).toISOString() : null,
+          name: formData.name,
+          priority: formData.priority,
+          deadline: formData.deadline ? formData.deadline.toISOString() : null,
         }),
       });
 
@@ -81,9 +79,6 @@ export default function TodosPage() {
       }
 
       if (res.ok) {
-        setName('');
-        setPriority('Low');
-        setDeadline('');
         fetchTodos();
       } else {
         const data = await res.json();
@@ -120,12 +115,12 @@ export default function TodosPage() {
   const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
-      
+
       if (res.status === 401) {
         router.push('/login');
         return;
       }
-      
+
       if (res.ok) {
         fetchTodos();
       } else {
@@ -164,69 +159,8 @@ export default function TodosPage() {
         </div>
       )}
 
-      <form onSubmit={handleAdd} className="mb-8 space-y-4">
-        <div>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Todoを入力（32文字以内）"
-            maxLength={32}
-            required
-            className="w-full border p-2 rounded"
-          />
-        </div>
-        <div className="flex gap-4">
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
-            className="border p-2 rounded"
-          >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </select>
-          <input
-            type="datetime-local"
-            value={deadline}
-            onChange={(e) => setDeadline(e.target.value)}
-            className="border p-2 rounded"
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-        >
-          追加
-        </button>
-      </form>
-
-      <ul className="space-y-2">
-        {todos.map((todo) => (
-          <li key={todo.id} className="border p-4 rounded flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <input
-                type="checkbox"
-                checked={todo.isDone}
-                onChange={() => handleToggle(todo.id, todo.isDone)}
-              />
-              <div>
-                <span className={todo.isDone ? 'line-through' : ''}>{todo.name}</span>
-                <span className="text-sm text-gray-600 ml-2">
-                  [{todo.priority}]
-                  {todo.deadline && ` ${new Date(todo.deadline).toLocaleString()}`}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => handleDelete(todo.id)}
-              className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-            >
-              削除
-            </button>
-          </li>
-        ))}
-      </ul>
+      <TodoForm onAddTodo={handleAdd} />
+      <TodoList todos={todos} updateIsDone={handleToggle} remove={handleDelete} />
     </div>
   );
 }
