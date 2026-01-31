@@ -3,133 +3,32 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import TodoList from '../components/TodoList';
-import TodoForm from '../components/TodoForm';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useTodos } from '@/hooks/useTodos';
+import { useTodoOperations } from '@/hooks/useTodoOperations';
+import MainDemo from '../components/MainDemo';
+import TodoPlacer from '../components/TodoPlacer';
+import TodoModal from '../components/TodoModal';
+import NewTodoDialog from '../components/NewTodoDialog';
+import { type Category, type Todo } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
-type Todo = {
-  id: string;
-  name: string;
-  isDone: boolean;
-  priority: 'Low' | 'Medium' | 'High';
-  deadline: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export default function TodosPage() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { user, loading: userLoading } = useCurrentUser();
+  const { todos, setTodos, loading: todosLoading, refetch } = useTodos();
+  const { addTodo, updateTodo, deleteTodo } = useTodoOperations(setTodos, refetch);
+  
+  const [selectedCategory, setSelectedCategory] = useState<Category>('personal');
+  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
+  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
 
   useEffect(() => {
-    checkUser();
-    fetchTodos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const checkUser = async () => {
-    const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    if (!userLoading && !user) {
       router.push('/login');
-    } else {
-      setLoading(false);
     }
-  };
-
-  const fetchTodos = async () => {
-    try {
-      const res = await fetch('/api/todos');
-      if (res.status === 401) {
-        router.push('/login');
-        return;
-      }
-      if (res.ok) {
-        const data = await res.json();
-        setTodos(data.todos);
-        setError(null);
-      } else {
-        setError('Todoの取得に失敗しました');
-      }
-    } catch (err) {
-      setError('ネットワークエラーが発生しました');
-    }
-  };
-
-  const handleAdd = async (formData: { name: string; priority: 'Low' | 'Medium' | 'High'; deadline: Date | null }) => {
-    setError(null);
-
-    try {
-      const res = await fetch('/api/todos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          priority: formData.priority,
-          deadline: formData.deadline ? formData.deadline.toISOString() : null,
-        }),
-      });
-
-      if (res.status === 401) {
-        router.push('/login');
-        return;
-      }
-
-      if (res.ok) {
-        fetchTodos();
-      } else {
-        const data = await res.json();
-        setError(data.error?.message || 'Todoの追加に失敗しました');
-      }
-    } catch (err) {
-      setError('ネットワークエラーが発生しました');
-    }
-  };
-
-  const handleToggle = async (id: string, isDone: boolean) => {
-    try {
-      const res = await fetch(`/api/todos/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isDone }),
-      });
-
-      if (res.status === 401) {
-        router.push('/login');
-        return;
-      }
-
-      if (res.ok) {
-        fetchTodos();
-      } else {
-        setError('Todoの更新に失敗しました');
-      }
-    } catch (err) {
-      setError('ネットワークエラーが発生しました');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
-
-      if (res.status === 401) {
-        router.push('/login');
-        return;
-      }
-
-      if (res.ok) {
-        fetchTodos();
-      } else {
-        setError('Todoの削除に失敗しました');
-      }
-    } catch (err) {
-      setError('ネットワークエラーが発生しました');
-    }
-  };
+  }, [user, userLoading, router]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -137,14 +36,49 @@ export default function TodosPage() {
     router.push('/login');
   };
 
-  if (loading) {
-    return <div>読み込み中...</div>;
+  const handleSaveTodo = async (todo: Todo) => {
+    await updateTodo(todo.id, todo);
+    setSelectedTodo(null);
+  };
+
+  const handleDeleteTodo = async (id: string) => {
+    await deleteTodo(id);
+    setSelectedTodo(null);
+  };
+
+  const handleToggleStatus = async (id: string) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    const newStatus = todo.status === 'done' ? 'todo' : 'done';
+    await updateTodo(id, { status: newStatus });
+  };
+
+  const handleAddTodo = async (todo: Omit<Todo, 'id'>) => {
+    await addTodo(todo);
+    setIsNewDialogOpen(false);
+  };
+
+  if (userLoading || todosLoading) {
+    return <div className="flex items-center justify-center h-screen">読み込み中...</div>;
   }
 
+  if (!user) {
+    return null;
+  }
+
+  const todoActions = {
+    openModal: (todo: Todo) => setSelectedTodo(todo),
+    toggleStatus: handleToggleStatus,
+    removeTodo: handleDeleteTodo,
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Todo App</h1>
+    <div className="relative h-screen w-screen overflow-hidden">
+      {/* Header */}
+      <div className="absolute top-4 left-4 z-30 flex items-center gap-4">
+        <h1 className="text-2xl font-bold text-white bg-black/50 px-4 py-2 rounded">
+          3D Todo Map
+        </h1>
         <button
           onClick={handleLogout}
           className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
@@ -153,14 +87,51 @@ export default function TodosPage() {
         </button>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+      {/* New Todo Button */}
+      <button
+        onClick={() => setIsNewDialogOpen(true)}
+        className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+      >
+        + 新しいTodo
+      </button>
+
+      {/* 3D Background */}
+      <div className="relative h-full w-full">
+        <MainDemo
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
+        
+        {/* Todo Placer Overlay */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="relative h-full w-full pointer-events-auto">
+            <TodoPlacer
+              todos={todos}
+              selectedCategory={selectedCategory}
+              actions={todoActions}
+            />
+          </div>
         </div>
+      </div>
+
+      {/* Todo Modal */}
+      {selectedTodo && (
+        <TodoModal
+          todo={selectedTodo}
+          onSave={handleSaveTodo}
+          onClose={() => setSelectedTodo(null)}
+          onRemove={handleDeleteTodo}
+        />
       )}
 
-      <TodoForm onAddTodo={handleAdd} />
-      <TodoList todos={todos} updateIsDone={handleToggle} remove={handleDelete} />
+      {/* New Todo Dialog */}
+      {isNewDialogOpen && (
+        <NewTodoDialog
+          onClose={() => setIsNewDialogOpen(false)}
+          onAdd={handleAddTodo}
+          category={selectedCategory}
+        />
+      )}
     </div>
   );
 }

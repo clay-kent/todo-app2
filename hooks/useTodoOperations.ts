@@ -1,30 +1,50 @@
-import { STATUSES, type Todo } from "@/types";
+'use client';
 
-export type TodoOperations = {
-  startWork: (todo: Todo) => void;
-  joinWork: (todo: Todo) => void;
-  handleCompleteTodo: (todo: Todo) => void;
-};
+import type { Todo } from '@/types';
 
-export const useTodoOperations = (
-  updateTodo: (todo: Todo) => void,
-  currentUserName: string
-): TodoOperations => {
-  const startWork = (todo: Todo) => {
-    const assignees = [...todo.assignees];
-    if (!assignees.includes(currentUserName)) assignees.push(currentUserName);
-    updateTodo({ ...todo, status: STATUSES.doing.value, assignees });
+export const useTodoOperations = (setTodos: React.Dispatch<React.SetStateAction<Todo[]>>, refetch: () => Promise<void>) => {
+  const addTodo = async (todo: Omit<Todo, 'id'>) => {
+    try {
+      const res = await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(todo),
+      });
+      if (res.ok) {
+        await refetch();
+      }
+    } catch (error) {
+      console.error('Failed to add todo:', error);
+    }
   };
 
-  const joinWork = (todo: Todo) => {
-    const assignees = [...todo.assignees];
-    if (!assignees.includes(currentUserName)) assignees.push(currentUserName);
-    updateTodo({ ...todo, assignees });
+  const updateTodo = async (id: string, updates: Partial<Todo>) => {
+    try {
+      const res = await fetch(`/api/todos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        await refetch();
+      }
+    } catch (error) {
+      console.error('Failed to update todo:', error);
+    }
   };
 
-  const handleCompleteTodo = (todo: Todo) => {
-    updateTodo({ ...todo, status: STATUSES.done.value });
+  const deleteTodo = async (id: string) => {
+    try {
+      const res = await fetch(`/api/todos/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        await refetch();
+      }
+    } catch (error) {
+      console.error('Failed to delete todo:', error);
+    }
   };
 
-  return { startWork, joinWork, handleCompleteTodo };
+  return { addTodo, updateTodo, deleteTodo };
 };

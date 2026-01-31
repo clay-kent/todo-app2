@@ -60,6 +60,21 @@ export async function PATCH(
     if (parsed.data.deadline !== undefined) {
       updateData.deadline = parsed.data.deadline || null;
     }
+    if (parsed.data.description !== undefined) {
+      updateData.description = parsed.data.description;
+    }
+    if (parsed.data.status !== undefined) {
+      updateData.status = parsed.data.status;
+    }
+    if (parsed.data.category !== undefined) {
+      updateData.category = parsed.data.category;
+    }
+    if (parsed.data.assignees !== undefined) {
+      updateData.assignees = parsed.data.assignees;
+    }
+    if (parsed.data.pos !== undefined) {
+      updateData.pos = parsed.data.pos;
+    }
 
     const { data: todo, error: updateError } = await supabase
       .from('todos')
@@ -71,19 +86,20 @@ export async function PATCH(
 
     if (updateError) throw updateError;
 
-    // Transform snake_case to camelCase
+    // Transform to frontend format
     const transformedTodo = {
       id: todo.id,
-      userId: todo.user_id,
       name: todo.name,
-      isDone: todo.is_done,
       priority: todo.priority,
-      deadline: todo.deadline,
-      createdAt: todo.created_at,
-      updatedAt: todo.updated_at,
+      deadline: todo.deadline ? new Date(todo.deadline) : null,
+      description: todo.description || null,
+      assignees: todo.assignees || [],
+      status: todo.status || 'todo',
+      category: todo.category || 'personal',
+      pos: todo.pos || null,
     };
 
-    return NextResponse.json({ todo: transformedTodo });
+    return NextResponse.json(transformedTodo);
   } catch (e: any) {
     console.error('PATCH /api/todos/[id] error:', e);
     return NextResponse.json(

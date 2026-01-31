@@ -1,17 +1,31 @@
-import { useEffect, useState } from "react";
+'use client';
 
-const CURRENT_USER_STORAGE_KEY = "currentUserName";
-const DEFAULT_USER_NAME = "Guest";
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 export const useCurrentUser = () => {
-  const [currentUserName, setCurrentUserName] = useState(() => {
-    const storedName = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
-    return storedName ?? DEFAULT_USER_NAME;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem(CURRENT_USER_STORAGE_KEY, currentUserName);
-  }, [currentUserName]);
+    const supabase = createClient();
 
-  return [currentUserName, setCurrentUserName] as const;
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return { user, loading };
 };

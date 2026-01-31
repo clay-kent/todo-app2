@@ -27,16 +27,17 @@ export async function GET(req: NextRequest) {
     // Transform snake_case to camelCase for consistency with frontend
     const transformedTodos = todos?.map((todo) => ({
       id: todo.id,
-      userId: todo.user_id,
       name: todo.name,
-      isDone: todo.is_done,
       priority: todo.priority,
-      deadline: todo.deadline,
-      createdAt: todo.created_at,
-      updatedAt: todo.updated_at,
+      deadline: todo.deadline ? new Date(todo.deadline) : null,
+      description: todo.description || null,
+      assignees: todo.assignees || [],
+      status: todo.status || 'todo',
+      category: todo.category || 'personal',
+      pos: todo.pos || null,
     })) || [];
 
-    return NextResponse.json({ todos: transformedTodos });
+    return NextResponse.json(transformedTodos);
   } catch (e) {
     console.error('GET /api/todos error:', e);
     return NextResponse.json(
@@ -78,32 +79,52 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const insertData: any = {
+      user_id: user.id,
+      name: parsed.data.name,
+      priority: parsed.data.priority,
+      deadline: parsed.data.deadline || null,
+    };
+
+    // Add optional fields if provided
+    if (parsed.data.description !== undefined) {
+      insertData.description = parsed.data.description;
+    }
+    if (parsed.data.status !== undefined) {
+      insertData.status = parsed.data.status;
+    }
+    if (parsed.data.category !== undefined) {
+      insertData.category = parsed.data.category;
+    }
+    if (parsed.data.assignees !== undefined) {
+      insertData.assignees = parsed.data.assignees;
+    }
+    if (parsed.data.pos !== undefined) {
+      insertData.pos = parsed.data.pos;
+    }
+
     const { data: todo, error: dbError } = await supabase
       .from('todos')
-      .insert({
-        user_id: user.id,
-        name: parsed.data.name,
-        priority: parsed.data.priority,
-        deadline: parsed.data.deadline || null,
-      })
+      .insert(insertData)
       .select()
       .single();
 
     if (dbError) throw dbError;
 
-    // Transform snake_case to camelCase
+    // Transform to frontend format
     const transformedTodo = {
       id: todo.id,
-      userId: todo.user_id,
       name: todo.name,
-      isDone: todo.is_done,
       priority: todo.priority,
-      deadline: todo.deadline,
-      createdAt: todo.created_at,
-      updatedAt: todo.updated_at,
+      deadline: todo.deadline ? new Date(todo.deadline) : null,
+      description: todo.description || null,
+      assignees: todo.assignees || [],
+      status: todo.status || 'todo',
+      category: todo.category || 'personal',
+      pos: todo.pos || null,
     };
 
-    return NextResponse.json({ todo: transformedTodo }, { status: 201 });
+    return NextResponse.json(transformedTodo, { status: 201 });
   } catch (e) {
     console.error('POST /api/todos error:', e);
     return NextResponse.json(
