@@ -1,6 +1,6 @@
 import React from "react";
-import { type Todo, type Category } from "../types";
-import TodoItem, { type TodoItemActions } from "./TodoItem";
+import { type Todo, type Category } from "@/types";
+import TodoItem3D, { type TodoItemActions } from "@/app/components/TodoItem3D";
 
 type TodoPlacerProps = {
   todos: Todo[];
@@ -38,7 +38,7 @@ const TodoPlacer: React.FC<TodoPlacerProps> = ({
                 actions.openModal(todo);
               }}
             >
-              <TodoItem todo={todo} {...actions} />
+              <TodoItem3D todo={todo} {...actions} />
             </div>
           );
         })}

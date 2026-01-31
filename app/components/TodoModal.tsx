@@ -2,12 +2,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import type { Priority, Status, Todo } from "../types";
-import { PRIORITIES, STATUSES, TodoSchema } from "../types";
-import DateField from "./DateField";
-import PosField from "./PosField";
-import SelectField from "./SelectField";
-import { Button } from "./ui/button";
+import type { Priority, Status, Todo } from "@/types";
+import { PRIORITIES, STATUSES, TodoSchema } from "@/types";
+import DateField from "@/app/components/DateField";
+import PosField from "@/app/components/PosField";
+import SelectField from "@/app/components/SelectField";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,17 +15,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import DeleteConfirm from "./DeleteConfirm";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
+} from "@/components/ui/dialog";
+import DeleteConfirm from "@/app/components/DeleteConfirm";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "./ui/field";
+} from "@/components/ui/field";
 
 type Props = {
   todo: Todo;

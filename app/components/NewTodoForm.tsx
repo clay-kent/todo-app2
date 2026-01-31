@@ -2,19 +2,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import type { Category, Priority as PriorityType, Todo } from "../types";
-import { PRIORITIES, TodoSchema } from "../types";
-import DateField from "./DateField";
-import NewDialog from "./NewDialog";
-import SelectField from "./SelectField";
-import PriorityDisplay from "./PriorityDisplay";
-import { FieldError } from "./ui/field";
+import type { Category, Priority as PriorityType, Todo } from "@/types";
+import { PRIORITIES, TodoSchema } from "@/types";
+import DateField from "@/app/components/DateField";
+import NewDialog from "@/app/components/NewDialog";
+import SelectField from "@/app/components/SelectField";
+import PriorityDisplay from "@/app/components/PriorityDisplay";
+import { FieldError } from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "./ui/input-group";
+} from "@/components/ui/input-group";
 
 type Props = {
   onAddTodo: (todo: Todo) => void;

@@ -2,11 +2,11 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import dayjs from "dayjs";
 import { Calendar1 } from "lucide-react";
 import type { JSX } from "react";
-import { Button } from "./ui/button";
-import { Calendar } from "./ui/calendar";
-import { FieldError } from "./ui/field";
-import { Label } from "./ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { FieldError } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type FieldState = { invalid: boolean; error?: { message?: string } };
 

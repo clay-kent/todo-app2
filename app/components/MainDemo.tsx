@@ -1,12 +1,12 @@
 import React from "react";
-import { type Category, CATEGORIES } from "../types";
+import { type Category, CATEGORIES } from "@/types";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "@/components/ui/select";
 
 type MainDemoProps = {
   selectedCategory: Category;

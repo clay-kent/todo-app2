@@ -1,8 +1,8 @@
 import React from "react";
-import { Badge } from "./ui/badge";
-import { Checkbox } from "./ui/checkbox";
-import { type Todo } from "../types";
-import PriorityDisplay from "./PriorityDisplay";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { type Todo } from "@/types";
+import PriorityDisplay from "@/app/components/PriorityDisplay";
 
 export type TodoItemActions = {
   openModal: (todo: Todo) => void;

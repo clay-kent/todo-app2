@@ -1,6 +1,6 @@
 import { Star } from "lucide-react";
-import { type Priority, PRIORITIES } from "../types";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { type Priority, PRIORITIES } from "@/types";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   value: Priority;

@@ -1,12 +1,12 @@
 import type { JSX } from "react";
-import { FieldError } from "./ui/field";
+import { FieldError } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "@/components/ui/select";
 
 type OptionConfig = { label: string };
 

@@ -19,7 +19,7 @@ type Props = {
   remove: (id: string) => void;
 };
 
-const TodoItem: React.FC<Props> = ({ todo, updateIsDone, remove }) => {
+const TodoItemList: React.FC<Props> = ({ todo, updateIsDone, remove }) => {
   const key = todo.id;
   const deadline = todo.deadline ? new Date(todo.deadline) : null;
   const isOverdue = deadline && !todo.isDone && new Date() > deadline;
@@ -56,4 +56,4 @@ const TodoItem: React.FC<Props> = ({ todo, updateIsDone, remove }) => {
   );
 };
 
-export default TodoItem;
+export default TodoItemList;

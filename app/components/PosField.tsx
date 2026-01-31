@@ -1,7 +1,7 @@
 import React from "react";
-import type { Pos } from "../types";
-import { Input } from "./ui/input";
-import { Field, FieldGroup, FieldLabel } from "./ui/field";
+import type { Pos } from "@/types";
+import { Input } from "@/components/ui/input";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 type PosFieldProp = { value: Pos | null; onChange: (v: Pos | null) => void };
 

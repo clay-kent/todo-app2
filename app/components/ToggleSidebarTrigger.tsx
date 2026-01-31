@@ -2,8 +2,8 @@ import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { PanelLeftIcon } from "lucide-react";
 import React from "react";
-import { useSidebar } from "./ui/sidebar";
-import { Toggle } from "./ui/toggle";
+import { useSidebar } from "@/components/ui/sidebar";
+import { Toggle } from "@/components/ui/toggle";
 
 const ToggleSidebarTrigger = ({
   className,

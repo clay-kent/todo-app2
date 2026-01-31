@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import TodoItem from './TodoItem';
+import TodoItemList from './TodoItemList';
 
 type Todo = {
   id: string;
@@ -26,7 +26,7 @@ const TodoList: React.FC<Props> = ({ todos, updateIsDone, remove }) => {
   return (
     <ul className="space-y-2">
       {todos.map((todo) => (
-        <TodoItem key={todo.id} todo={todo} updateIsDone={updateIsDone} remove={remove} />
+        <TodoItemList key={todo.id} todo={todo} updateIsDone={updateIsDone} remove={remove} />
       ))}
     </ul>
   );

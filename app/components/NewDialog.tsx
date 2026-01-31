@@ -1,8 +1,8 @@
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { Plus } from "lucide-react";
 import React from "react";
-import { Button } from "./ui/button";
-import { DialogTitle } from "./ui/dialog";
+import { Button } from "@/components/ui/button";
+import { DialogTitle } from "@/components/ui/dialog";
 
 const NewDialog: React.FC<{
   children: React.ReactNode;

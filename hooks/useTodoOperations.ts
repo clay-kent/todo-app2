@@ -1,4 +1,4 @@
-import { STATUSES, type Todo } from "../types";
+import { STATUSES, type Todo } from "@/types";
 
 export type TodoOperations = {
   startWork: (todo: Todo) => void;
