@@ -13,7 +13,7 @@ export const useTodoOperations = (
   const startWork = (todo: Todo) => {
     const assignees = [...todo.assignees];
     if (!assignees.includes(currentUserName)) assignees.push(currentUserName);
-    updateTodo({ ...todo, status: STATUSES.inprogress.value, assignees });
+    updateTodo({ ...todo, status: STATUSES.doing.value, assignees });
   };
 
   const joinWork = (todo: Todo) => {
