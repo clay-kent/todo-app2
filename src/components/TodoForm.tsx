@@ -1,95 +1,115 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import dayjs from 'dayjs';
-import type { Todo } from '../types';
-import { PRIORITIES, TodoSchema } from '../types';
+import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useEffect, useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import type { Category, Priority, Todo } from "../types";
+import { PRIORITIES, TodoSchema } from "../types";
+import DateField from "./DateField";
+import NewDialog from "./NewDialog";
+import SelectField from "./SelectField";
+import { FieldError } from "./ui/field";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "./ui/input-group";
 
 type Props = {
   onAddTodo: (todo: Todo) => void;
+  category: Category;
 };
 
-// フォーム用のスキーマ（idとisDoneを除外）
-const TodoFormSchema = TodoSchema.omit({ id: true, isDone: true });
+const TodoFormSchema = TodoSchema.omit({ id: true });
 type TodoFormData = z.infer<typeof TodoFormSchema>;
 
-const TodoForm: React.FC<Props> = ({ onAddTodo }) => {
+const createTodoFormDefaultValues = (category: Category): TodoFormData => ({
+  name: "",
+  priority: "Low",
+  deadline: null,
+  description: null,
+  assignees: [],
+  status: "todo",
+  category,
+  pos: null,
+});
+
+const TodoForm: React.FC<Props> = ({ onAddTodo, category }) => {
+  const defaultValues = useMemo(
+    () => createTodoFormDefaultValues(category),
+    [category],
+  );
   const {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty, isValid },
   } = useForm<TodoFormData>({
     resolver: zodResolver(TodoFormSchema),
-    defaultValues: {
-      name: '',
-      priority: 'Low',
-      deadline: null,
-    },
+    defaultValues,
   });
 
-  const deadline = watch('deadline');
-
-  const onSubmit = (data: TodoFormData) => {
+  const onSubmit: (data: TodoFormData) => void = (data) => {
     const newTodo: Todo = {
       id: crypto.randomUUID(),
-      isDone: false,
       ...data,
+      category,
     };
     onAddTodo(newTodo);
-    reset();
+    reset(defaultValues);
   };
 
+  useEffect(() => {
+    setValue("category", category);
+  }, [category, setValue]);
+
+  const canSubmit = isDirty && isValid;
+  const onCloseAttempt = () => !canSubmit;
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div>
-        <label htmlFor='name'>name</label>
-        <input 
-          id="name" 
-          type="text" 
-          {...register('name')}
-          placeholder='32文字以内' 
-        />
-        {errors.name && <p style={{ color: 'red' }}>{errors.name.message}</p>}
-      </div>
-
-      <div>
-        <div>優先度</div>
-        {Object.entries(PRIORITIES).map(([key, config]) => (
-          <div key={key}>
-            <input 
-              type="radio" 
-              id={`priority-${key}`} 
-              value={key} 
-              {...register('priority')}
+    <NewDialog canClose={onCloseAttempt} title="タスクを追加">
+      <form id="todo-form" onSubmit={handleSubmit(onSubmit)}>
+        <InputGroup aria-invalid={!isValid}>
+          <InputGroupInput placeholder="タスク名を入力" {...register("name")} />
+          <InputGroupAddon align="block-end" className="flex-wrap">
+            <Controller
+              name="deadline"
+              control={control}
+              render={({ field, fieldState }) => (
+                <DateField
+                  field={field}
+                  fieldState={fieldState}
+                  id="deadline"
+                />
+              )}
             />
-            <label htmlFor={`priority-${key}`}>{config.label}</label>
-          </div>
-        ))}
-        {errors.priority && <p style={{ color: 'red' }}>{errors.priority.message}</p>}
-      </div>
-
-      <div>
-        <label htmlFor='deadline'>Deadline</label>
-        <input 
-          id="deadline"
-          type="datetime-local"
-          value={deadline ? dayjs(deadline).format("YYYY-MM-DDTHH:mm:ss") : ""}
-          onChange={(e) => {
-            const value = e.target.value;
-            setValue('deadline', value ? new Date(value) : null);
-          }}
-        />
-        {errors.deadline && <p style={{ color: 'red' }}>{errors.deadline.message}</p>}
-      </div>
-
-      <button type="submit">
-        Add Todo
-      </button>
-    </form>
+            <Controller
+              name="priority"
+              control={control}
+              render={({ field, fieldState }) => (
+                <SelectField<Priority>
+                  field={field}
+                  options={PRIORITIES}
+                  name="priority"
+                  fieldState={fieldState}
+                  className="w-24 border-0"
+                />
+              )}
+            />
+            <InputGroupButton
+              type="submit"
+              disabled={!canSubmit}
+              className="ml-auto px-4"
+            >
+              保存
+            </InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
+        {errors.name?.message && <FieldError>{errors.name.message}</FieldError>}
+      </form>
+    </NewDialog>
   );
 };
 
