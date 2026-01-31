@@ -119,13 +119,13 @@ Successfully migrated the Todo application from Vite + React + localStorage to N
 
 ### Known Issues (Dependencies)
 ✅ **RESOLVED: Next.js DoS Vulnerabilities**
-- Upgraded from Next.js 14.2.35 to 15.5.11
+- Upgraded from Next.js 14.2.35 to Next.js 15 (^15.0.8)
 - Fixed 9 high/critical severity DoS vulnerabilities (GHSA-9g9p-9gw9-jx7f, GHSA-h25m-26qc-wcjf, and related)
 - All HTTP request deserialization DoS issues resolved
 
 ⚠️ **1 moderate severity vulnerability** remains:
 - `next` canary versions 15.0.0-canary.0 - 15.6.0-canary.60 - Unbounded Memory Consumption (GHSA-5f7q-jpqc-wp7h)
-- **Not applicable** - Production version 15.5.11 is not affected
+- **Not applicable** - Stable Next.js 15 releases are not affected
 - Only affects canary/preview builds
 
 **Risk Assessment**: VERY LOW
@@ -193,6 +193,6 @@ All critical functionality has been implemented and tested. Error handling is co
 
 **Migration Date**: January 29, 2026
 **Status**: ✅ COMPLETE
-**Build Status**: ✅ PASSING (Next.js 15.5.11)
+**Build Status**: ✅ PASSING (Next.js 15)
 **Security Status**: ✅ SECURE (9 CVEs fixed)
 **Security Review**: ✅ COMPLETED

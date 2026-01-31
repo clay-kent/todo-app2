@@ -23,13 +23,16 @@ npm install
 2. SQL Editor で以下のテーブルを作成:
 
 ```sql
+-- Create priority enum (ordered High > Medium > Low for sorting)
+CREATE TYPE priority_level AS ENUM ('High', 'Medium', 'Low');
+
 -- Create todos table
 CREATE TABLE todos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name VARCHAR(32) NOT NULL,
   is_done BOOLEAN DEFAULT false,
-  priority TEXT CHECK (priority IN ('High', 'Medium', 'Low')) DEFAULT 'Low',
+  priority priority_level DEFAULT 'Low',
   deadline TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -64,7 +67,8 @@ CREATE POLICY "Users can insert their own todos"
 
 CREATE POLICY "Users can update their own todos"
   ON todos FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own todos"
   ON todos FOR DELETE
